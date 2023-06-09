@@ -144,9 +144,17 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
     @Transactional(rollbackFor = Exception.class)
     public RespModel<Integer> run(TestSuitesRunDTO testSuitesRunDTO, String strike) {
         int suiteId = testSuitesRunDTO.getGroupId();
-//        int caseId = testSuitesRunDTO.getCaseId();
-//        log.info("suiteId: " + suiteId);
-//        log.info("caseId: " + caseId);
+
+        if(null != testSuitesRunDTO.getSteps()){
+            List<StepsDTO> steps = new ArrayList<>();
+            for (StepsDTO step : testSuitesRunDTO.getSteps()) {
+                if(step.getDisabled().equals(0)){
+                    steps.add(step);
+                }
+            }
+            testSuitesRunDTO.setSteps(steps);
+        }
+
         TestSuitesDTO testSuitesDTO = findById(suiteId, testSuitesRunDTO);
         if (testSuitesDTO == null) {
             return new RespModel<>(3001, "suite.deleted");
