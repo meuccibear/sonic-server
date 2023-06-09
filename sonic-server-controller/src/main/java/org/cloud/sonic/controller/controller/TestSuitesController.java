@@ -29,6 +29,7 @@ import org.cloud.sonic.common.tools.JWTTokenTool;
 import org.cloud.sonic.controller.models.base.CommentPage;
 import org.cloud.sonic.controller.models.domain.TestSuites;
 import org.cloud.sonic.controller.models.dto.TestSuitesDTO;
+import org.cloud.sonic.controller.models.dto.TestSuitesRunDTO;
 import org.cloud.sonic.controller.services.TestSuitesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -60,6 +61,22 @@ public class TestSuitesController {
             }
         }
         return testSuitesService.runSuite(id, strike);
+    }
+
+    @WebAspect
+    @Operation(summary = "运行测试套件", description = "运行指定项目的指定测试套件")
+    @Parameter(name = "id", description = "测试套件id")
+    @PostMapping("/run")
+    public RespModel<Integer> run(@Validated @RequestBody TestSuitesRunDTO testSuitesRunDTO , HttpServletRequest request) {
+        String strike = "SYSTEM";
+        if (request.getHeader("SonicToken") != null) {
+            String token = request.getHeader("SonicToken");
+            String userName = jwtTokenTool.getUserName(token);
+            if (userName != null) {
+                strike = userName;
+            }
+        }
+        return testSuitesService.run(testSuitesRunDTO, strike);
     }
 
     @WebAspect

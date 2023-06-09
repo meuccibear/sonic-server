@@ -142,6 +142,67 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public RespModel<Integer> run(TestSuitesRunDTO testSuitesRunDTO, String strike) {
+        int suiteId = testSuitesRunDTO.getGroupId();
+//        int caseId = testSuitesRunDTO.getCaseId();
+//        log.info("suiteId: " + suiteId);
+//        log.info("caseId: " + caseId);
+        TestSuitesDTO testSuitesDTO = findById(suiteId, testSuitesRunDTO);
+        if (testSuitesDTO == null) {
+            return new RespModel<>(3001, "suite.deleted");
+        }
+
+        if (testSuitesDTO.getTestCases().size() == 0) {
+            return new RespModel<>(3002, "suite.empty.cases");
+        }
+
+        List<Devices> devicesList = testSuitesDTO.getDevices().stream().map(DevicesDTO::convertTo).collect(Collectors.toList());
+        for (int i = devicesList.size() - 1; i >= 0; i--) {
+            if (devicesList.get(i).getStatus().equals(DeviceStatus.OFFLINE) || devicesList.get(i).getStatus().equals(DeviceStatus.DISCONNECTED)) {
+                devicesList.remove(devicesList.get(i));
+            }
+        }
+        if (devicesList.size() == 0) {
+            return new RespModel<>(3003, "suite.not.free.device");
+        }
+
+        // 初始化部分结果状态信息
+        Results results = new Results();
+        results.setStatus(ResultStatus.RUNNING);
+        results.setSuiteId(suiteId);
+        results.setSuiteName(testSuitesDTO.getName());
+        results.setStrike(strike);
+        if (testSuitesDTO.getCover() == CoverType.CASE) {
+            results.setSendMsgCount(testSuitesDTO.getTestCases().size());
+        }
+        if (testSuitesDTO.getCover() == CoverType.DEVICE) {
+            results.setSendMsgCount(testSuitesDTO.getTestCases().size() * devicesList.size());
+        }
+        results.setReceiveMsgCount(0);
+        results.setProjectId(testSuitesDTO.getProjectId());
+        resultsService.save(results);
+
+        //组装全局参数为json对象
+        List<GlobalParams> globalParamsList = globalParamsService.findAll(testSuitesDTO.getProjectId());
+
+        //将包含|的拆开多个参数并打乱，去掉json对象多参数的字段
+        Map<String, List<String>> valueMap = new HashMap<>();
+        JSONObject gp = new JSONObject();
+        for (GlobalParams g : globalParamsList) {
+            if (g.getParamsValue().contains("|")) {
+                List<String> shuffle = new ArrayList<>(Arrays.asList(g.getParamsValue().split("\\|")));
+                Collections.shuffle(shuffle);
+                valueMap.put(g.getParamsKey(), shuffle);
+            } else {
+                gp.put(g.getParamsKey(), g.getParamsValue());
+            }
+        }
+        coverHandlerMap.get(testSuitesDTO.getCover()).handlerSuite(testSuitesDTO, gp, devicesList, valueMap, results);
+        return new RespModel<>(RespEnum.HANDLE_OK, results.getId());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public RespModel<String> forceStopSuite(int resultId, String strike) {
 
         Results results = resultsService.findById(resultId);
@@ -252,6 +313,30 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
 
             // 填充devices
             List<DevicesDTO> devicesDTOList = devicesMapper.listByTestSuitesId(suiteId)
+                    .stream().map(TypeConverter::convertTo).collect(Collectors.toList());
+            testSuitesDTO.setDevices(devicesDTOList);
+
+            return testSuitesDTO;
+        } else {
+            return null;
+        }
+    }
+
+    public TestSuitesDTO findById(int suiteId, TestSuitesRunDTO testSuitesRunDTO) {
+        if (existsById(suiteId)) {
+            TestSuitesDTO testSuitesDTO = baseMapper.selectById(suiteId).convertTo();
+
+            List<TestCasesDTO> testCasesDTOList = testCasesMapper.listById(testSuitesRunDTO.getCaseId())
+                    .stream().map(TypeConverter::convertTo).collect(Collectors.toList());
+            for (TestCasesDTO testCasesDTO : testCasesDTOList) {
+                if (testCasesDTO.getId().equals(testSuitesRunDTO.getCaseId())) {
+                    testCasesDTO.setSteps(testSuitesRunDTO.getSteps());
+                }
+            }
+            testSuitesDTO.setTestCases(testCasesDTOList);
+
+            // 填充devices
+            List<DevicesDTO> devicesDTOList = devicesMapper.listByTestSuitesId(testSuitesDTO.getId())
                     .stream().map(TypeConverter::convertTo).collect(Collectors.toList());
             testSuitesDTO.setDevices(devicesDTOList);
 
@@ -484,10 +569,17 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
                                        JSONObject gp, Results results, StepsService stepsService) {
         JSONObject testCase = new JSONObject();
         List<JSONObject> steps = new ArrayList<>();
-        List<StepsDTO> stepsList = stepsService.findByCaseIdOrderBySort(testCases.getId(), true);
+        List<StepsDTO> stepsList = testCases.getSteps();
+        if (null == stepsList) {
+            stepsList = stepsService.findByCaseIdOrderBySort(testCases.getId(), true);
+        }
         for (StepsDTO s : stepsList) {
             steps.add(getStep(s));
         }
+//        List<StepsDTO> stepsList = stepsService.findByCaseIdOrderBySort(testCases.getId(), true);
+//        for (StepsDTO s : stepsList) {
+//            steps.add(getStep(s));
+//        }
         JSONObject perf = new JSONObject();
         perf.put("isOpen", isOpenPerfmon);
         perf.put("perfInterval", perfmonInterval);

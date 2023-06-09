@@ -8,6 +8,7 @@ import org.cloud.sonic.controller.models.base.CommentPage;
 import org.cloud.sonic.controller.models.domain.TestSuites;
 import org.cloud.sonic.controller.models.dto.StepsDTO;
 import org.cloud.sonic.controller.models.dto.TestSuitesDTO;
+import org.cloud.sonic.controller.models.dto.TestSuitesRunDTO;
 
 import java.util.List;
 
@@ -18,6 +19,8 @@ import java.util.List;
  */
 public interface TestSuitesService extends IService<TestSuites> {
     RespModel<Integer> runSuite(int id, String strike);
+
+    RespModel<Integer> run(TestSuitesRunDTO testSuitesRunDTO, String strike);
 
     RespModel<String> forceStopSuite(int id, String strike);
 

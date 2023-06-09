@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.cloud.sonic.controller.models.domain.TestCases;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -22,4 +23,8 @@ public interface TestCasesMapper extends BaseMapper<TestCases> {
             "where tstc.test_suites_id = #{suiteId} " +
             "order by tstc.sort asc")
     List<TestCases> listByTestSuitesId(@Param("suiteId") int suiteId);
+
+    @Select("select * from test_cases " +
+            "where id = #{id} ")
+    List<TestCases> listById(@Param("id") int id);
 }
