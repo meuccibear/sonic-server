@@ -34,6 +34,7 @@ public enum RespEnum {
     UPDATE_FAIL(3004, "fail.update"),
     DELETE_FAIL(3002, "fail.delete"),
     UPLOAD_FAIL(3003, "fail.upload"),
+    OPERATE_FAIL(3004, "fail.operate"),
     UNAUTHORIZED(1001, "unauthorized"),
     SERVICE_NOT_FOUND(1002, "not.found.service"),
     PERMISSION_DENIED(1003, "permission.denied"),

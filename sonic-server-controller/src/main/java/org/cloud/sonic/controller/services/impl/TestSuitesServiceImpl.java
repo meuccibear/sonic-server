@@ -23,6 +23,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.extern.slf4j.Slf4j;
+import org.cloud.sonic.common.gitUtils.JSONUtils;
+import org.cloud.sonic.common.gitUtils.StringUtils;
 import org.cloud.sonic.common.http.RespEnum;
 import org.cloud.sonic.common.http.RespModel;
 import org.cloud.sonic.controller.mapper.*;
@@ -31,12 +34,11 @@ import org.cloud.sonic.controller.models.base.TypeConverter;
 import org.cloud.sonic.controller.models.domain.*;
 import org.cloud.sonic.controller.models.dto.*;
 import org.cloud.sonic.controller.models.enums.ConditionEnum;
-import org.cloud.sonic.controller.models.interfaces.CoverType;
-import org.cloud.sonic.controller.models.interfaces.DeviceStatus;
-import org.cloud.sonic.controller.models.interfaces.PlatformType;
-import org.cloud.sonic.controller.models.interfaces.ResultStatus;
+import org.cloud.sonic.controller.models.interfaces.*;
 import org.cloud.sonic.controller.services.*;
 import org.cloud.sonic.controller.services.impl.base.SonicServiceImpl;
+import org.cloud.sonic.controller.tools.Constant;
+import org.cloud.sonic.controller.tools.ElTreeBuilder;
 import org.cloud.sonic.controller.transport.TransportWorker;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +58,7 @@ import java.util.stream.Collectors;
  * @date 2021/8/20 17:51
  */
 @Service
+@Slf4j
 public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, TestSuites> implements TestSuitesService, ApplicationContextAware {
 
     @Autowired
@@ -78,6 +81,7 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
     private AgentsService agentsService;
     @Autowired
     private PackagesService packagesService;
+
 
     private Map<Integer, CoverHandler> coverHandlerMap;
 
@@ -140,22 +144,39 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
         return new RespModel<>(RespEnum.HANDLE_OK, results.getId());
     }
 
+    @Autowired
+    AccountsService accountsService;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public RespModel<Integer> run(TestSuitesRunDTO testSuitesRunDTO, String strike) {
-        int suiteId = testSuitesRunDTO.getGroupId();
 
-        if(null != testSuitesRunDTO.getSteps()){
+        if (null != testSuitesRunDTO.getSteps()) {
             List<StepsDTO> steps = new ArrayList<>();
             for (StepsDTO step : testSuitesRunDTO.getSteps()) {
-                if(step.getDisabled().equals(0)){
+                if (step.getDisabled().equals(0)) {
                     steps.add(step);
                 }
             }
             testSuitesRunDTO.setSteps(steps);
         }
 
-        TestSuitesDTO testSuitesDTO = findById(suiteId, testSuitesRunDTO);
+        if (-10 == testSuitesRunDTO.getCaseId()) {
+            // 脚本
+//            {"liveenter":1,"livechat":2,"livelike":3,"liveleave":4,"livefollow":5}
+            log.info(testSuitesRunDTO.getScript().getClass().toString());
+            if (null != testSuitesRunDTO.getScript()) {
+                try {
+                    JSONObject jsonObject = JSON.parseObject(testSuitesRunDTO.getScript());
+                    return runScriptBook(jsonObject.getJSONArray("Order"), strike);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            return new RespModel<>(3001, "suite.script.err");
+        }
+
+        TestSuitesDTO testSuitesDTO = findById(testSuitesRunDTO);
         if (testSuitesDTO == null) {
             return new RespModel<>(3001, "suite.deleted");
         }
@@ -177,7 +198,7 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
         // 初始化部分结果状态信息
         Results results = new Results();
         results.setStatus(ResultStatus.RUNNING);
-        results.setSuiteId(suiteId);
+        results.setSuiteId(testSuitesRunDTO.getGroupId());
         results.setSuiteName(testSuitesDTO.getName());
         results.setStrike(strike);
         if (testSuitesDTO.getCover() == CoverType.CASE) {
@@ -205,9 +226,179 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
                 gp.put(g.getParamsKey(), g.getParamsValue());
             }
         }
+        log.info("testSuitesDTO:{}", JSON.toJSONString(testSuitesDTO));
+
+        // TODO 帐号
+        List<Accounts> accountsList = null;
+        // 查找是否有登陆用例 若有 则获取和设备相同数量的帐号
+        if (StringUtils.notIsEmpty(testSuitesRunDTO.getScript())) {
+            accountsList = new ArrayList<>();
+            String[] rows = testSuitesRunDTO.getScript().split("\n");
+            String[] col;
+            Accounts accounts;
+            for (String row : rows) {
+                col = row.split(",");
+                if (col.length == 2) {
+                    accounts = accountsService.findByName(col[0]);
+                    if (null == accounts) {
+                        accounts = new Accounts(null, "tiktok", col[0], col[1], testSuitesDTO.getProjectId(), null, null);
+                        accountsService.save(accounts);
+                    } else if (null != accounts.getUdId() && !accounts.getUdId().equals("")) {
+                        return new RespModel(3004, "suite.account.insufficient");
+                    }
+                    accountsList.add(accounts);
+                }
+            }
+        } else {
+            for (TestCasesDTO testCase : testSuitesDTO.getTestCases()) {
+                if (Constant.getActionId(ActionType.LOGIN) == testCase.getId()) {
+                    accountsList = accountsService.selectNotHaveUseAccounts(devicesList.size());
+                }
+            }
+        }
+
+        if (devicesList.size() != accountsList.size()) {
+            return new RespModel(3004, "suite.account.insufficient");
+        }
+        testSuitesDTO.pullSupper("accounts", accountsList);
+
+
         coverHandlerMap.get(testSuitesDTO.getCover()).handlerSuite(testSuitesDTO, gp, devicesList, valueMap, results);
         return new RespModel<>(RespEnum.HANDLE_OK, results.getId());
     }
+
+    private RespModel<Integer> runScriptBook(JSONArray orderArr, String strike) {
+        JSONObject order;
+        List<String> names = new ArrayList<>();
+        orderArr.forEach(item -> {
+            JSONObject jsonObject = (JSONObject) item;
+            names.add(jsonObject.getString("name"));
+        });
+
+        List<Accounts> accountsList = accountsService.findByNames(names);
+        Map<String, Accounts> accountMap = new HashMap<>();
+        List<String> udIdList = new ArrayList<>();
+        for (Accounts accounts : accountsList) {
+            accountMap.put(accounts.getName(), accounts);
+            udIdList.add(accounts.getUdId());
+            if(StringUtils.isEmpty(accounts.getUdId())){
+                return new RespModel<>(3003, "suite.account");
+            }
+        }
+
+        List<Devices> devicesList = devicesMapper.getDevicesByUdId(udIdList);
+        // 检查在线
+        for (int i = devicesList.size() - 1; i >= 0; i--) {
+            if (devicesList.get(i).getStatus().equals(DeviceStatus.OFFLINE) || devicesList.get(i).getStatus().equals(DeviceStatus.DISCONNECTED)) {
+                devicesList.remove(devicesList.get(i));
+            }
+        }
+        if (devicesList.size() == 0) {
+            return new RespModel<>(3003, "suite.not.free.device");
+        }
+        Map<String, Devices> devicesMap = new HashMap<>();
+        for (Devices devices : devicesList) {
+            devicesMap.put(devices.getUdId(), devices);
+        }
+
+        TestSuitesDTO testSuitesDTO = baseMapper.selectById(-10).convertTo();
+        if (testSuitesDTO == null) {
+            return new RespModel<>(3001, "suite.deleted");
+        }
+
+        Integer delayed;
+        for (int orderId = 0; orderId < orderArr.size(); orderId++) {
+            order = orderArr.getJSONObject(orderId);
+            delayed = order.getInteger("delayed");
+
+            runScript(order, strike, accountsList, accountMap, devicesMap, testSuitesDTO);
+            if (null != delayed && 0 != delayed) {
+                try {
+                    Thread.sleep(delayed);
+                } catch (InterruptedException e) {
+                }
+            }
+
+        }
+        return new RespModel<>(RespEnum.HANDLE_OK);
+    }
+
+    private RespModel<Integer> runScript(JSONObject jsonObject, String strike, List<Accounts> accountsList,
+                                         Map<String, Accounts> accountMap,
+                                         Map<String, Devices> devicesMap, TestSuitesDTO testSuitesDTO) {
+        String name = jsonObject.getString("name");
+        String action = jsonObject.getString("action");
+
+        ActionType actionType = ActionType.valueOf(action.toUpperCase());
+        Integer suid = Constant.getActionId(actionType);
+
+        List<Devices> devices = new ArrayList<>();
+        log.info("suid: {}", suid);
+        devices.add(devicesMap.get(accountMap.get(name).getUdId()));
+
+        List<TestCasesDTO> testCasesDTOList = testCasesMapper.listById(suid)
+                .stream().map(TypeConverter::convertTo).collect(Collectors.toList());
+        for (TestCasesDTO testCasesDTO : testCasesDTOList) {
+            testCasesDTO.setSteps(stepsService.findByCaseIdOrderBySort(testCasesDTO.getId(), true));
+        }
+        testSuitesDTO.setTestCases(testCasesDTOList);
+
+        // 初始化部分结果状态信息
+        Results results = new Results();
+        results.setStatus(ResultStatus.RUNNING);
+        results.setSuiteId(testSuitesDTO.getId());
+        results.setSuiteName(testSuitesDTO.getName());
+        results.setStrike(strike);
+        if (testSuitesDTO.getCover() == CoverType.CASE) {
+            results.setSendMsgCount(testSuitesDTO.getTestCases().size());
+        }
+        if (testSuitesDTO.getCover() == CoverType.DEVICE) {
+            results.setSendMsgCount(testSuitesDTO.getTestCases().size() * devices.size());
+        }
+        results.setReceiveMsgCount(0);
+        results.setProjectId(testSuitesDTO.getProjectId());
+        resultsService.save(results);
+
+        // 填充devices
+        testSuitesDTO.setDevices(devices.stream().map(TypeConverter::convertTo).collect(Collectors.toList()));
+
+        //将包含|的拆开多个参数并打乱，去掉json对象多参数的字段
+        Map<String, List<String>> valueMap = new HashMap<>();
+        JSONObject gp = new JSONObject();
+        testSuitesDTO.getSupper().putAll(jsonObject);
+
+        log.info("testSuitesDTO: {}", JSON.toJSONString(testSuitesDTO));
+
+        coverHandlerMap.get(testSuitesDTO.getCover()).handlerSuite(testSuitesDTO, gp, devices, valueMap, results);
+
+        return null;
+    }
+
+    @Override
+    public List<ElTreeBuilder.NodeBuild> elSelect(int projectId) {
+        List<TestSuites> testSuitesList = lambdaQuery().eq(TestSuites::getProjectId, projectId)
+                .orderByDesc(TestSuites::getId)
+                .list();
+
+        List<ElTreeBuilder.NodeBuild> nodes = new ArrayList<>();
+
+        List<DevicesDTO> devicesDTOList = null;
+        for (TestSuites testSuites : testSuitesList) {
+            devicesDTOList = devicesMapper.listByTestSuitesId(testSuites.getId())
+                    .stream().map(TypeConverter::convertTo).collect(Collectors.toList());
+
+            List<ElTreeBuilder.NodeBuild> children = new ArrayList<>();
+
+            for (DevicesDTO devicesDTO : devicesDTOList) {
+                children.add(new ElTreeBuilder.NodeBuild("device_" + devicesDTO.getId(), devicesDTO.getUdId(), null));
+            }
+            nodes.add(new ElTreeBuilder.NodeBuild("group_" + testSuites.getId(), testSuites.getName(), children));
+
+        }
+
+        return nodes;
+    }
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -333,6 +524,51 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
     public TestSuitesDTO findById(int suiteId, TestSuitesRunDTO testSuitesRunDTO) {
         if (existsById(suiteId)) {
             TestSuitesDTO testSuitesDTO = baseMapper.selectById(suiteId).convertTo();
+
+            List<TestCasesDTO> testCasesDTOList = testCasesMapper.listById(testSuitesRunDTO.getCaseId())
+                    .stream().map(TypeConverter::convertTo).collect(Collectors.toList());
+            for (TestCasesDTO testCasesDTO : testCasesDTOList) {
+                if (testCasesDTO.getId().equals(testSuitesRunDTO.getCaseId())) {
+                    testCasesDTO.setSteps(testSuitesRunDTO.getSteps());
+                }
+            }
+            testSuitesDTO.setTestCases(testCasesDTOList);
+
+            // 填充devices
+            List<DevicesDTO> devicesDTOList = devicesMapper.listByTestSuitesId(testSuitesDTO.getId())
+                    .stream().map(TypeConverter::convertTo).collect(Collectors.toList());
+            testSuitesDTO.setDevices(devicesDTOList);
+
+            return testSuitesDTO;
+        } else {
+            return null;
+        }
+    }
+
+    public TestSuitesDTO findById(TestSuitesRunDTO testSuitesRunDTO) {
+//        Integer suiteId = 1;
+//        if (existsById(suiteId)) {
+//            TestSuitesDTO testSuitesDTO = baseMapper.selectById(suiteId).convertTo();
+//            List<TestCasesDTO> testCasesDTOList = testCasesMapper.listById(testSuitesRunDTO.getCaseId())
+//                    .stream().map(TypeConverter::convertTo).collect(Collectors.toList());
+//            for (TestCasesDTO testCasesDTO : testCasesDTOList) {
+//                if (testCasesDTO.getId().equals(testSuitesRunDTO.getCaseId())) {
+//                    testCasesDTO.setSteps(testSuitesRunDTO.getSteps());
+//                }
+//            }
+//            testSuitesDTO.setTestCases(testCasesDTOList);
+//
+//            List<DevicesDTO> devicesDTOList = devicesMapper.getDevices(testSuitesRunDTO.getDeviceIds())
+//                    .stream().map(TypeConverter::convertTo).collect(Collectors.toList());
+//
+//            testSuitesDTO.setDevices(devicesDTOList);
+//
+//            return testSuitesDTO;
+//        }
+//        return null;
+
+        if (existsById(testSuitesRunDTO.getGroupId())) {
+            TestSuitesDTO testSuitesDTO = baseMapper.selectById(testSuitesRunDTO.getGroupId()).convertTo();
 
             List<TestCasesDTO> testCasesDTOList = testCasesMapper.listById(testSuitesRunDTO.getCaseId())
                     .stream().map(TypeConverter::convertTo).collect(Collectors.toList());
@@ -675,27 +911,54 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
         @Autowired
         private StepsService stepsService;
 
+        @Autowired
+        AccountsService accountsService;
+
         @Override
         public void handlerSuite(TestSuitesDTO testSuitesDTO, JSONObject gp,
                                  List<Devices> devicesList, Map<String, List<String>> valueMap, Results results) {
             List<JSONObject> suiteDetailList = null;
-            for (Devices devices : devicesList) {
-                gp = refreshGlobalParams(gp, valueMap);
-                if (suiteDetailList == null) {
-                    suiteDetailList = new ArrayList<>();
-                    for (TestCasesDTO testCases : testSuitesDTO.getTestCases()) {
-                        suiteDetailList.add(packageTestCase(devices, testSuitesDTO.getIsOpenPerfmon(), testSuitesDTO.getPerfmonInterval(),
-                                testCases, gp, results, this.stepsService));
-                    }
-                } else {
-                    for (JSONObject suiteDetail : suiteDetailList) {
-                        suiteDetail.put("device", new ArrayList<>() {{
-                            add(devices);
-                        }});
-                        suiteDetail.put("gp", gp);
-                    }
+            Accounts accounts = null;
+            String context = "";
+            List<Accounts> accountsList = (List<Accounts>) testSuitesDTO.getSupper().getOrDefault("accounts", null);
+            for (int deviceIndex = 0; deviceIndex < devicesList.size(); deviceIndex++) {
+                Devices devices = devicesList.get(deviceIndex);
+                if (null != accountsList) {
+                    accounts = accountsList.get(deviceIndex);
                 }
+                gp = refreshGlobalParams(gp, valueMap);
+//                if (suiteDetailList == null) {
+                suiteDetailList = new ArrayList<>();
+                for (TestCasesDTO testCases : testSuitesDTO.getTestCases()) {
+                    // 如果是登陆用例 那么就获取帐号
+                    if (null != accountsList) {
+                        for (StepsDTO step : testCases.getSteps()) {
+                            context = StringUtils.formatV(step.getContent(), JSONUtils.toJSONObject(accounts));
+                            log.info("content:{} >>> {}", step.getContent(), context);
+                            step.setContent(context);
+                        }
+                    } else {
+                        for (StepsDTO step : testCases.getSteps()) {
+                            context = StringUtils.formatV(step.getContent(), testSuitesDTO.getSupper());
+                            log.info("content:{} >>> {}", step.getContent(), context);
+                            step.setContent(context);
+                        }
+                    }
+                    suiteDetailList.add(packageTestCase(devices, testSuitesDTO.getIsOpenPerfmon(), testSuitesDTO.getPerfmonInterval(),
+                            testCases, gp, results, this.stepsService));
+                }
+//                } else {
+//                    for (JSONObject suiteDetail : suiteDetailList) {
+//                        suiteDetail.put("device", new ArrayList<>() {{
+//                            add(devices);
+//                        }});
+//                        suiteDetail.put("gp", gp);
+//                    }
+//                }
                 send(devices.getAgentId(), testSuitesDTO.getPlatform(), suiteDetailList);
+                if(null != accounts){
+                    log.info("update:{}", accountsService.updateUdId(accounts.getName(), devices.getUdId()));
+                }
             }
         }
 

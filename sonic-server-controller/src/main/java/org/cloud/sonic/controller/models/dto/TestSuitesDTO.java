@@ -1,5 +1,6 @@
 package org.cloud.sonic.controller.models.dto;
 
+import com.alibaba.fastjson.JSONObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.cloud.sonic.controller.models.base.TypeConverter;
+import org.cloud.sonic.controller.models.domain.Accounts;
 import org.cloud.sonic.controller.models.domain.TestSuites;
 
 import java.io.Serializable;
@@ -58,4 +60,14 @@ public class TestSuitesDTO implements Serializable, TypeConverter<TestSuitesDTO,
 
     @Schema(description = "测试套件默认通知机器人id串，为null时取项目配置的默认值", example = "[1,2]")
     int[] alertRobotIds;
+
+    private JSONObject supper = new JSONObject();
+
+    public JSONObject getSupper() {
+        return supper;
+    }
+
+    public void pullSupper(String key, Object value) {
+        supper.put(key, value);
+    }
 }

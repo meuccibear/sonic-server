@@ -20,6 +20,7 @@ package org.cloud.sonic.controller.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.cloud.sonic.common.config.WebAspect;
@@ -27,10 +28,12 @@ import org.cloud.sonic.common.http.RespEnum;
 import org.cloud.sonic.common.http.RespModel;
 import org.cloud.sonic.common.tools.JWTTokenTool;
 import org.cloud.sonic.controller.models.base.CommentPage;
+import org.cloud.sonic.controller.models.domain.TestCases;
 import org.cloud.sonic.controller.models.domain.TestSuites;
 import org.cloud.sonic.controller.models.dto.TestSuitesDTO;
 import org.cloud.sonic.controller.models.dto.TestSuitesRunDTO;
 import org.cloud.sonic.controller.services.TestSuitesService;
+import org.cloud.sonic.controller.tools.ElTreeBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -67,7 +70,7 @@ public class TestSuitesController {
     @Operation(summary = "运行测试套件", description = "运行指定项目的指定测试套件")
     @Parameter(name = "id", description = "测试套件id")
     @PostMapping("/run")
-    public RespModel<Integer> run(@Validated @RequestBody TestSuitesRunDTO testSuitesRunDTO , HttpServletRequest request) {
+    public RespModel<Integer> run(@RequestBody TestSuitesRunDTO testSuitesRunDTO , HttpServletRequest request) {
         String strike = "SYSTEM";
         if (request.getHeader("SonicToken") != null) {
             String token = request.getHeader("SonicToken");
@@ -148,5 +151,18 @@ public class TestSuitesController {
         } else {
             return new RespModel<>(RespEnum.ID_NOT_FOUND);
         }
+    }
+
+    @WebAspect
+    @Operation(summary = "查询测试用例列表", description = "查找对应项目id下的测试用例列表")
+    @Parameters(value = {
+            @Parameter(name = "projectId", description = "项目id")
+    })
+    @GetMapping("/elSelect")
+    public RespModel<List<ElTreeBuilder.NodeBuild>> elSelect(@RequestParam(name = "projectId") int projectId) {
+        return new RespModel<>(
+                RespEnum.SEARCH_OK,
+                testSuitesService.elSelect(projectId)
+        );
     }
 }

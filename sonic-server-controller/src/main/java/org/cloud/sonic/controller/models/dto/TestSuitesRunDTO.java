@@ -21,15 +21,20 @@ import java.util.List;
 public class TestSuitesRunDTO implements Serializable {
 
     @Positive
-    @Schema(description = "用例编号", required = true, example = "1")
+    @Schema(description = "用例编号", example = "1")
     Integer caseId;
 
-    @NotNull
     @Schema(description = "分组", required = true, example = "1")
     Integer groupId;
 
+    @Schema(description = "设备编号", required = true, example = "1")
+    List<Integer> deviceIds;
+
     //因为一个控件可以存在于多个步骤，也可以一个步骤有多个同样的控件，所以是多对多关系
     List<StepsDTO> steps;
+
+    String script;
+
 
 }
 

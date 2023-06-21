@@ -32,7 +32,7 @@ import java.util.List;
  * @des
  * @date 2021/10/9 23:28
  */
-@Service
+@Service("globalParamsService")
 public class GlobalParamsServiceImpl extends SonicServiceImpl<GlobalParamsMapper, GlobalParams> implements GlobalParamsService {
 
     @Autowired

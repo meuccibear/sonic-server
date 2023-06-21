@@ -9,6 +9,7 @@ import org.cloud.sonic.controller.models.domain.TestSuites;
 import org.cloud.sonic.controller.models.dto.StepsDTO;
 import org.cloud.sonic.controller.models.dto.TestSuitesDTO;
 import org.cloud.sonic.controller.models.dto.TestSuitesRunDTO;
+import org.cloud.sonic.controller.tools.ElTreeBuilder;
 
 import java.util.List;
 
@@ -21,6 +22,8 @@ public interface TestSuitesService extends IService<TestSuites> {
     RespModel<Integer> runSuite(int id, String strike);
 
     RespModel<Integer> run(TestSuitesRunDTO testSuitesRunDTO, String strike);
+
+    List<ElTreeBuilder.NodeBuild> elSelect(int projectId);
 
     RespModel<String> forceStopSuite(int id, String strike);
 

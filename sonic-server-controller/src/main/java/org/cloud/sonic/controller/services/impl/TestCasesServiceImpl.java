@@ -24,12 +24,15 @@ import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapp
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.cloud.sonic.controller.mapper.*;
 import org.cloud.sonic.controller.models.base.CommentPage;
+import org.cloud.sonic.controller.models.base.TypeConverter;
 import org.cloud.sonic.controller.models.domain.*;
+import org.cloud.sonic.controller.models.dto.DevicesDTO;
 import org.cloud.sonic.controller.models.dto.PublicStepsAndStepsIdDTO;
 import org.cloud.sonic.controller.models.dto.StepsDTO;
 import org.cloud.sonic.controller.models.dto.TestCasesDTO;
 import org.cloud.sonic.controller.services.*;
 import org.cloud.sonic.controller.services.impl.base.SonicServiceImpl;
+import org.cloud.sonic.controller.tools.ElTreeBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,6 +68,9 @@ public class TestCasesServiceImpl extends SonicServiceImpl<TestCasesMapper, Test
     @Autowired
     private ModulesMapper modulesMapper;
 
+    @Autowired
+    private DevicesMapper devicesMapper;
+
     @Override
     public CommentPage<TestCasesDTO> findAll(int projectId, int platform, String name, List<Integer> moduleIds, Page<TestCases> pageable,
                                              String idSort, String designerSort, String editTimeSort) {
@@ -91,7 +97,7 @@ public class TestCasesServiceImpl extends SonicServiceImpl<TestCasesMapper, Test
 
     @Transactional
     public TestCasesDTO findCaseDetail(TestCases testCases) {
-        if (testCases == null){
+        if (testCases == null) {
             return new TestCasesDTO().setId(0).setName("unknown");
         }
 
@@ -111,6 +117,8 @@ public class TestCasesServiceImpl extends SonicServiceImpl<TestCasesMapper, Test
                 .orderByDesc(TestCases::getEditTime)
                 .list();
     }
+
+
 
     @Transactional(rollbackFor = Exception.class)
     @Override

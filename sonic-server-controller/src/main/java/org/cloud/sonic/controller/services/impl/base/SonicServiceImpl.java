@@ -10,10 +10,12 @@ import com.baomidou.mybatisplus.extension.toolkit.ChainWrappers;
 import lombok.extern.slf4j.Slf4j;
 import org.cloud.sonic.common.exception.ServerErrorException;
 import org.cloud.sonic.common.tools.ReflectionTool;
+import org.cloud.sonic.controller.models.domain.Accounts;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -23,7 +25,7 @@ import java.util.Objects;
  * @date 2021/12/17 11:38 下午
  */
 @Slf4j
-public class SonicServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M, T> {
+public abstract class SonicServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M, T> {
 
     protected boolean existsById(Serializable id) {
         Field idField = getIdField(getDomainClass());
@@ -76,4 +78,5 @@ public class SonicServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M,
         }
         return null;
     }
+
 }
