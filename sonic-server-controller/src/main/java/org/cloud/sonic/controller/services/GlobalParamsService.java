@@ -6,7 +6,7 @@ import org.cloud.sonic.controller.models.domain.GlobalParams;
 import java.util.List;
 
 public interface GlobalParamsService extends IService<GlobalParams> {
-    List<GlobalParams> findAll(int projectId);
+    List<GlobalParams> findAll(int projectId, boolean additional);
 
     boolean delete(int id);
 

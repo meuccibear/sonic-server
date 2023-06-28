@@ -54,7 +54,7 @@ public class GlobalParamsServiceImplTest {
                         .eq(GlobalParams::getProjectId, Mockito.any()).list())
                 .thenReturn(Arrays.asList(globalParams));
 
-        List<GlobalParams> list = globalParamsService.findAll(1);
+        List<GlobalParams> list = globalParamsService.findAll(1, false);
 
         Assert.assertEquals(1, list.size());
         Assert.assertEquals("hello", list.get(0).getParamsKey());

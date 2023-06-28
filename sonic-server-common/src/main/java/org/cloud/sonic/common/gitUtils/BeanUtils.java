@@ -6,6 +6,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * List 转换类
@@ -50,7 +51,7 @@ public class BeanUtils {
         if (values != null) {
             for (Object o : values) {
                 if (null != o) {
-                    jsonObject.putAll(JSONUtils.toJSONObject(o));
+                    jsonObject.putAll((Map<? extends String, ? extends Object>) JSONUtils.toJSON(o));
                 }
             }
         }
@@ -67,7 +68,7 @@ public class BeanUtils {
         if (values != null) {
             for (Object o : values) {
                 if (null != o) {
-                    jsonObject.putAll(JSONUtils.toJSONObject(o));
+                    jsonObject.putAll((Map<? extends String, ? extends Object>) JSONUtils.toJSON(o));
                 }
             }
         }
@@ -79,8 +80,8 @@ public class BeanUtils {
         if (null == parameter) {
             return toJavaObject("{}", type);
         }
-        JSONObject parameterJson = JSONUtils.toJSONObject(parameter);
-        JSONObject dataJson = JSONUtils.toJSONObject(data);
+        JSONObject parameterJson = (JSONObject) JSONUtils.toJSON(parameter);
+        JSONObject dataJson = (JSONObject) JSONUtils.toJSON(data);
         for (String s : parameterJson.keySet()) {
             parameterJson.put(s, dataJson.get(s));
         }

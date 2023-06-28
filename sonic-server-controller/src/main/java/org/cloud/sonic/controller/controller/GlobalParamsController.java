@@ -53,7 +53,7 @@ public class GlobalParamsController {
     @Parameter(name = "projectId", description = "项目id")
     @GetMapping("/list")
     public RespModel<List<GlobalParams>> findByProjectId(@RequestParam(name = "projectId") int projectId) {
-        return new RespModel<>(RespEnum.SEARCH_OK, globalParamsService.findAll(projectId));
+        return new RespModel<>(RespEnum.SEARCH_OK, globalParamsService.findAll(projectId, true));
     }
 
     @WebAspect

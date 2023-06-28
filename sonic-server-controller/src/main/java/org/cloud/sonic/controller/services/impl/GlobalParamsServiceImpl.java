@@ -18,6 +18,7 @@
 package org.cloud.sonic.controller.services.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import org.cloud.sonic.controller.mapper.GlobalParamsMapper;
 import org.cloud.sonic.controller.models.domain.GlobalParams;
 import org.cloud.sonic.controller.services.GlobalParamsService;
@@ -39,8 +40,15 @@ public class GlobalParamsServiceImpl extends SonicServiceImpl<GlobalParamsMapper
     private GlobalParamsMapper globalParamsMapper;
 
     @Override
-    public List<GlobalParams> findAll(int projectId) {
-        return lambdaQuery().eq(GlobalParams::getProjectId, projectId).list();
+    public List<GlobalParams> findAll(int projectId, boolean additional) {
+
+        LambdaQueryChainWrapper<GlobalParams> lambdaQuery = lambdaQuery().eq(GlobalParams::getProjectId, projectId);
+        if(!additional){
+            lambdaQuery.ge(GlobalParams::getId, -1);
+        }
+        return lambdaQuery.list();
+
+//        return lambdaQuery().eq(GlobalParams::getProjectId, projectId).ge(GlobalParams::getId, -1).list();
     }
 
     @Override

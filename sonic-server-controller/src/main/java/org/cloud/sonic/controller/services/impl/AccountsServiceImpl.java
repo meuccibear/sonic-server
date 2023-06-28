@@ -79,4 +79,5 @@ public class AccountsServiceImpl extends SonicServiceImpl<AccountsMapper, Accoun
 
         return accountsList;
     }
+
 }

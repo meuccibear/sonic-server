@@ -126,7 +126,7 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
         resultsService.save(results);
 
         //组装全局参数为json对象
-        List<GlobalParams> globalParamsList = globalParamsService.findAll(testSuitesDTO.getProjectId());
+        List<GlobalParams> globalParamsList = globalParamsService.findAll(testSuitesDTO.getProjectId(), false);
 
         //将包含|的拆开多个参数并打乱，去掉json对象多参数的字段
         Map<String, List<String>> valueMap = new HashMap<>();
@@ -212,7 +212,7 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
         resultsService.save(results);
 
         //组装全局参数为json对象
-        List<GlobalParams> globalParamsList = globalParamsService.findAll(testSuitesDTO.getProjectId());
+        List<GlobalParams> globalParamsList = globalParamsService.findAll(testSuitesDTO.getProjectId(), false);
 
         //将包含|的拆开多个参数并打乱，去掉json对象多参数的字段
         Map<String, List<String>> valueMap = new HashMap<>();
@@ -233,30 +233,42 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
         // 查找是否有登陆用例 若有 则获取和设备相同数量的帐号
         if (StringUtils.notIsEmpty(testSuitesRunDTO.getScript())) {
             accountsList = new ArrayList<>();
-            String[] rows = testSuitesRunDTO.getScript().split("\n");
-            String[] col;
-            Accounts accounts;
-            for (String row : rows) {
-                col = row.split(",");
-                if (col.length == 2) {
-                    accounts = accountsService.findByName(col[0]);
-                    if (null == accounts) {
-                        accounts = new Accounts(null, "tiktok", col[0], col[1], testSuitesDTO.getProjectId(), null, null);
-                        accountsService.save(accounts);
-                    } else if (null != accounts.getUdId() && !accounts.getUdId().equals("")) {
-                        return new RespModel(3004, "suite.account.insufficient");
+            JSONObject accountData = (JSONObject) JSONUtils.toJSON(testSuitesRunDTO.getScript());
+            if (ObjectUtils.isEmpty(accountData)) {
+                String[] rows = testSuitesRunDTO.getScript().split("\n");
+                String[] col;
+                Accounts accounts;
+                for (String row : rows) {
+                    col = row.split(",");
+                    if (col.length == 2) {
+                        accounts = new Accounts(null, "Tiktok", col[0], col[1], testSuitesDTO.getProjectId(), col[2], col[3],
+                                null, null);
+                        accountsList.add(accounts);
                     }
+                }
+            } else {
+                JSONArray accountArr = accountData.getJSONArray("Accounts");
+                JSONObject accountItem = null;
+                Accounts accounts;
+                for (int i = 0; i < accountArr.size(); i++) {
+                    accountItem = accountArr.getJSONObject(i);
+                    // proxy session
+                    accounts = new Accounts(null, "Tiktok", accountItem.getString("name"), accountItem.getString("password"), testSuitesDTO.getProjectId(), accountItem.getString("proxy"), accountItem.getString("session"), null, null);
                     accountsList.add(accounts);
                 }
             }
+            accountsList = addAccount(accountsList);
+
         } else {
             for (TestCasesDTO testCase : testSuitesDTO.getTestCases()) {
                 if (Constant.getActionId(ActionType.LOGIN) == testCase.getId()) {
                     accountsList = accountsService.selectNotHaveUseAccounts(devicesList.size());
+                    break;
                 }
             }
         }
 
+        log.info("{} {} ", JSONUtils.toJSON(devicesList), JSONUtils.toJSON(accountsList));
         if (devicesList.size() != accountsList.size()) {
             return new RespModel(3004, "suite.account.insufficient");
         }
@@ -265,6 +277,22 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
 
         coverHandlerMap.get(testSuitesDTO.getCover()).handlerSuite(testSuitesDTO, gp, devicesList, valueMap, results);
         return new RespModel<>(RespEnum.HANDLE_OK, results.getId());
+    }
+
+    private List<Accounts> addAccount(List<Accounts> accountsList) {
+        List<Accounts> result = new ArrayList<>();
+        Accounts dbAccounts;
+        for (Accounts accounts : accountsList) {
+            dbAccounts = accountsService.findByName(accounts.getName());
+            if (null == dbAccounts) {
+                accountsService.save(accounts);
+                result.add(accounts);
+            } else if(null == dbAccounts.getUdId() || dbAccounts.getUdId().equals("")) {
+                result.add(accounts);
+//                return new RespModel(3004, "suite.account.insufficient");
+            }
+        }
+        return result;
     }
 
     private RespModel<Integer> runScriptBook(JSONArray orderArr, String strike) {
@@ -281,7 +309,7 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
         for (Accounts accounts : accountsList) {
             accountMap.put(accounts.getName(), accounts);
             udIdList.add(accounts.getUdId());
-            if(StringUtils.isEmpty(accounts.getUdId())){
+            if (StringUtils.isEmpty(accounts.getUdId())) {
                 return new RespModel<>(3003, "suite.account");
             }
         }
@@ -933,8 +961,8 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
                     // 如果是登陆用例 那么就获取帐号
                     if (null != accountsList) {
                         for (StepsDTO step : testCases.getSteps()) {
-                            context = StringUtils.formatV(step.getContent(), JSONUtils.toJSONObject(accounts));
-                            log.info("content:{} >>> {}", step.getContent(), context);
+                            context = StringUtils.formatV(step.getContent(), (JSONObject)JSONUtils.toJSON(accounts));
+                            log.info("content:{} >> >> {}", step.getContent(), context);
                             step.setContent(context);
                         }
                     } else {
@@ -956,8 +984,8 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
 //                    }
 //                }
                 send(devices.getAgentId(), testSuitesDTO.getPlatform(), suiteDetailList);
-                if(null != accounts){
-                    log.info("update:{}", accountsService.updateUdId(accounts.getName(), devices.getUdId()));
+                if (null != accounts) {
+                    accountsService.updateUdId(accounts.getName(), devices.getUdId());
                 }
             }
         }

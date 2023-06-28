@@ -238,7 +238,7 @@ public class StringUtils<resultMap> {
         if (ObjectUtils.isEmpty(str) || ObjectUtils.isEmpty(data)) {
             return null;
         }
-        JSONObject jsonObject = JSONUtils.toJSONObject(data);
+        JSONObject jsonObject = (JSONObject) JSONUtils.toJSON(data);
         for (Object o : jsonObject.keySet().toArray()) {
             str = str.replaceAll(String.format("\\$\\{%s}", o), String.valueOf(jsonObject.get(o)));
         }
@@ -249,6 +249,7 @@ public class StringUtils<resultMap> {
         if (ObjectUtils.isEmpty(str) || ObjectUtils.isEmpty(datas)) {
             return str;
         }
+
         for (Object data : datas) {
             str = str.replace(substringx(str, "$", "}"), String.valueOf(data));
         }

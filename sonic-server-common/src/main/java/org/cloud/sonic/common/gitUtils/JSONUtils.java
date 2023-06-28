@@ -1,8 +1,8 @@
 package org.cloud.sonic.common.gitUtils;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.TypeReference;
 import org.cloud.sonic.common.gitUtils.exception.MsgException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,7 +45,7 @@ public class JSONUtils {
      */
     public static Object jsGetData(Object jsonObject, String str) {
         if (!(jsonObject instanceof Map) && ObjectUtils.notIsEmpty(jsonObject)) {
-            jsonObject = JSONUtils.toJSONObject(jsonObject);
+            jsonObject = JSONUtils.toJSON(jsonObject);
         }
 
         String[] colNames = str.split("\\.");
@@ -165,17 +165,19 @@ public class JSONUtils {
         return 0.00;
     }
 
-    public static JSONObject toJSONObject(Object data) {
+    public static Object toJSON(Object data) {
         String json;
         if (data instanceof String) {
             json = (String) data;
-//        } else if (data instanceof JSONObject) {
-//            return (JSONObject) data;
         } else {
             json = JSONObject.toJSONString(data);
         }
 
-        return JSONObject.parseObject(json);
+        try {
+            return JSON.parse(json);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static JSONArray toJSONArray(Object data) {
@@ -212,6 +214,28 @@ public class JSONUtils {
             }
         }
         return null;
+    }
+
+
+    /**
+     * 判断是否为json字符串
+     *
+     * @param content
+     * @return
+     */
+    public static boolean isJSONString(String content) {
+        if (StringUtils.isEmpty(content)) {
+            return false;
+        }
+        if (!content.startsWith("{") || !content.endsWith("}")) {
+            return false;
+        }
+        try {
+            JSONObject.parse(content);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
 }

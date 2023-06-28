@@ -75,6 +75,14 @@ public class Accounts implements Serializable, TypeConverter<Accounts, AccountsD
     private Integer projectId;
 
     @TableField
+    @Column(value = "proxy", isNull = false, comment = "代理")
+    private String proxy;
+
+    @TableField
+    @Column(value = "session", isNull = false, comment = "session")
+    private String session;
+
+    @TableField
     @Column(comment = "帐号状态：0.删除 1.正常 2.使用中 3.无法使用 | DELETE NORNAL INUSE UNALEUSE", isNull = false, defaultValue ="1")
     private Integer status;
 

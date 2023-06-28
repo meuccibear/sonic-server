@@ -163,7 +163,7 @@ public class TestCasesServiceImpl extends SonicServiceImpl<TestCasesMapper, Test
                 array.add(testSuitesService.getStep(steps));
             }
             jsonDebug.put("steps", array);
-            List<GlobalParams> globalParamsList = globalParamsService.findAll(runStepCase.getProjectId());
+            List<GlobalParams> globalParamsList = globalParamsService.findAll(runStepCase.getProjectId(), false);
             JSONObject gp = new JSONObject();
             Map<String, List<String>> valueMap = new HashMap<>();
             for (GlobalParams g : globalParamsList) {
