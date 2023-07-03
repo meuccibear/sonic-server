@@ -269,11 +269,10 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
         }
 
         log.info("{} {} ", JSONUtils.toJSON(devicesList), JSONUtils.toJSON(accountsList));
-        if (devicesList.size() != accountsList.size()) {
+        if (null != accountsList && devicesList.size() != accountsList.size()) {
             return new RespModel(3004, "suite.account.insufficient");
         }
         testSuitesDTO.pullSupper("accounts", accountsList);
-
 
         coverHandlerMap.get(testSuitesDTO.getCover()).handlerSuite(testSuitesDTO, gp, devicesList, valueMap, results);
         return new RespModel<>(RespEnum.HANDLE_OK, results.getId());

@@ -38,4 +38,7 @@ public class AccountsDTO implements Serializable, TypeConverter<AccountsDTO, Acc
     @Schema(description = "帐号状态", example = "1")
     Integer status;
 
+    @Schema(description = "所属项目id，不属于任何项目的系统级机器人此项为null", example = "1")
+    private Integer projectId;
+
 }

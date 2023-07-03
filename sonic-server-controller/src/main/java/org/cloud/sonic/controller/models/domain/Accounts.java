@@ -75,11 +75,11 @@ public class Accounts implements Serializable, TypeConverter<Accounts, AccountsD
     private Integer projectId;
 
     @TableField
-    @Column(value = "proxy", isNull = false, comment = "代理")
+    @Column(value = "proxy", comment = "代理")
     private String proxy;
 
     @TableField
-    @Column(value = "session", isNull = false, comment = "session")
+    @Column(value = "session", comment = "session")
     private String session;
 
     @TableField
