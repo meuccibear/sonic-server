@@ -21,7 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.cloud.sonic.controller.models.domain.ConfList;
 import org.cloud.sonic.controller.models.interfaces.ConfType;
 import org.cloud.sonic.controller.services.ConfListService;
+import org.cloud.sonic.controller.services.GlobalParamsService;
 import org.cloud.sonic.controller.services.ResourcesService;
+import org.cloud.sonic.controller.services.TestSuitesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
@@ -36,6 +38,9 @@ public class SonicRunner implements ApplicationRunner {
 
     @Autowired
     private ResourcesService resourcesService;
+
+    @Autowired
+    GlobalParamsService globalParamsService;
 
     @Autowired
     private ConfListService confListService;
@@ -62,6 +67,7 @@ public class SonicRunner implements ApplicationRunner {
                 return;
             }
             resourcesService.init();
+
             log.info("version: {}, resource init finish!", version);
             confListService.save(ConfType.RESOURCE, version, null);
 
@@ -78,6 +84,7 @@ public class SonicRunner implements ApplicationRunner {
                 return;
             }
 
+            globalParamsService.init();
             confListService.save(ConfType.REMOTE_DEBUG_TIMEOUT, "480", null);
             log.info("remote conf init finish!");
 

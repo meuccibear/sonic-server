@@ -20,15 +20,20 @@ package org.cloud.sonic.controller.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.cloud.sonic.common.config.WebAspect;
 import org.cloud.sonic.common.config.WhiteUrl;
 import org.cloud.sonic.common.exception.SonicException;
 import org.cloud.sonic.common.http.RespEnum;
 import org.cloud.sonic.common.http.RespModel;
+import org.cloud.sonic.controller.mapper.TestSuitesMapper;
 import org.cloud.sonic.controller.models.base.TypeConverter;
 import org.cloud.sonic.controller.models.domain.Projects;
+import org.cloud.sonic.controller.models.domain.TestSuites;
 import org.cloud.sonic.controller.models.dto.ProjectsDTO;
+import org.cloud.sonic.controller.services.GlobalParamsService;
 import org.cloud.sonic.controller.services.ProjectsService;
+import org.cloud.sonic.controller.services.TestSuitesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -42,6 +47,7 @@ import java.util.stream.Collectors;
  * @date 2021/9/9 22:46
  */
 @Tag(name = "项目管理相关")
+@Slf4j
 @RestController
 @RequestMapping("/projects")
 public class ProjectsController {
@@ -49,11 +55,18 @@ public class ProjectsController {
     @Autowired
     private ProjectsService projectsService;
 
+    @Autowired
+    TestSuitesMapper testSuitesMapper;
+
     @WebAspect
     @Operation(summary = "更新项目信息", description = "新增或更新项目信息")
     @PutMapping
     public RespModel<String> save(@Validated @RequestBody ProjectsDTO projects) {
-        projectsService.save(projects.convertTo());
+        Projects projectsData = projects.convertTo();
+        projectsService.save(projectsData);
+        if(null == testSuitesMapper.selectById(-10)){
+            testSuitesMapper.insert(new TestSuites(-10, 2, "执行脚本", 1, 0, 1000, projectsData.getId(), null));
+        }
         return new RespModel<>(RespEnum.UPDATE_OK);
     }
 

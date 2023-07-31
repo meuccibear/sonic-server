@@ -286,7 +286,7 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
             if (null == dbAccounts) {
                 accountsService.save(accounts);
                 result.add(accounts);
-            } else if(null == dbAccounts.getUdId() || dbAccounts.getUdId().equals("")) {
+            } else if (null == dbAccounts.getUdId() || dbAccounts.getUdId().equals("")) {
                 result.add(accounts);
 //                return new RespModel(3004, "suite.account.insufficient");
             }
@@ -960,7 +960,7 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
                     // 如果是登陆用例 那么就获取帐号
                     if (null != accountsList) {
                         for (StepsDTO step : testCases.getSteps()) {
-                            context = StringUtils.formatV(step.getContent(), (JSONObject)JSONUtils.toJSON(accounts));
+                            context = StringUtils.formatV(step.getContent(), (JSONObject) JSONUtils.toJSON(accounts));
                             log.info("content:{} >> >> {}", step.getContent(), context);
                             step.setContent(context);
                         }

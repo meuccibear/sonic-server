@@ -19,6 +19,7 @@ import java.util.List;
  * @date 2021/8/20 17:51
  */
 public interface TestSuitesService extends IService<TestSuites> {
+
     RespModel<Integer> runSuite(int id, String strike);
 
     RespModel<Integer> run(TestSuitesRunDTO testSuitesRunDTO, String strike);

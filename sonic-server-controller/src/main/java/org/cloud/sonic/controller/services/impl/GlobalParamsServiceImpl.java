@@ -40,6 +40,14 @@ public class GlobalParamsServiceImpl extends SonicServiceImpl<GlobalParamsMapper
     private GlobalParamsMapper globalParamsMapper;
 
     @Override
+    public void init() {
+
+//        INSERT INTO `sonic`.`global_params` (`id`, `params_key`, `params_value`, `project_id`) VALUES (-10, 'base', '{\"login\":1,\"liveenter\":1,\"livechat\":2,\"livelike\":3,\"liveleave\":4,\"livefollow\":5}', 1);
+//        System.out.println("{\"login\":1,\"liveenter\":1,\"livechat\":2,\"livelike\":3,\"liveleave\":4,\"livefollow\":5}");
+        baseMapper.insert(new GlobalParams(-10, "base", "{\"login\":1,\"liveenter\":1,\"livechat\":2,\"livelike\":3,\"liveleave\":4,\"livefollow\":5}", 1));
+    }
+
+    @Override
     public List<GlobalParams> findAll(int projectId, boolean additional) {
 
         LambdaQueryChainWrapper<GlobalParams> lambdaQuery = lambdaQuery().eq(GlobalParams::getProjectId, projectId);
