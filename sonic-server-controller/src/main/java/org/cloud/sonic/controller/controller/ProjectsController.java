@@ -64,9 +64,7 @@ public class ProjectsController {
     public RespModel<String> save(@Validated @RequestBody ProjectsDTO projects) {
         Projects projectsData = projects.convertTo();
         projectsService.save(projectsData);
-        if(null == testSuitesMapper.selectById(-10)){
-            testSuitesMapper.insert(new TestSuites(-10, 2, "执行脚本", 1, 0, 1000, projectsData.getId(), null));
-        }
+        testSuitesMapper.insert(new TestSuites(null, 2, "执行脚本", 1, 0, 1000, projectsData.getId(), null));
         return new RespModel<>(RespEnum.UPDATE_OK);
     }
 

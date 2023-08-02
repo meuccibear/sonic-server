@@ -23,7 +23,9 @@ import org.cloud.sonic.controller.mapper.GlobalParamsMapper;
 import org.cloud.sonic.controller.models.domain.GlobalParams;
 import org.cloud.sonic.controller.services.GlobalParamsService;
 import org.cloud.sonic.controller.services.impl.base.SonicServiceImpl;
+import org.cloud.sonic.controller.tools.Constant;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,6 +35,7 @@ import java.util.List;
  * @des
  * @date 2021/10/9 23:28
  */
+@Order(1)
 @Service("globalParamsService")
 public class GlobalParamsServiceImpl extends SonicServiceImpl<GlobalParamsMapper, GlobalParams> implements GlobalParamsService {
 
@@ -41,17 +44,17 @@ public class GlobalParamsServiceImpl extends SonicServiceImpl<GlobalParamsMapper
 
     @Override
     public void init() {
-
-//        INSERT INTO `sonic`.`global_params` (`id`, `params_key`, `params_value`, `project_id`) VALUES (-10, 'base', '{\"login\":1,\"liveenter\":1,\"livechat\":2,\"livelike\":3,\"liveleave\":4,\"livefollow\":5}', 1);
-//        System.out.println("{\"login\":1,\"liveenter\":1,\"livechat\":2,\"livelike\":3,\"liveleave\":4,\"livefollow\":5}");
-        baseMapper.insert(new GlobalParams(-10, "base", "{\"login\":1,\"liveenter\":1,\"livechat\":2,\"livelike\":3,\"liveleave\":4,\"livefollow\":5}", 1));
+        GlobalParams globalParams = findById(Constant.BASE_ID);
+        if (null == globalParams) {
+            baseMapper.insert(new GlobalParams(-10, "base", "{\"login\":1,\"liveenter\":1,\"livechat\":2,\"livelike\":3,\"liveleave\":4,\"livefollow\":5}", 1));
+        }
     }
 
     @Override
     public List<GlobalParams> findAll(int projectId, boolean additional) {
 
         LambdaQueryChainWrapper<GlobalParams> lambdaQuery = lambdaQuery().eq(GlobalParams::getProjectId, projectId);
-        if(!additional){
+        if (!additional) {
             lambdaQuery.ge(GlobalParams::getId, -1);
         }
         return lambdaQuery.list();

@@ -53,6 +53,7 @@ public class SonicRunner implements ApplicationRunner {
         resourceInit();
         remoteInit();
         idleInit();
+        globalParamsService.init();
     }
 
     /**
@@ -60,12 +61,13 @@ public class SonicRunner implements ApplicationRunner {
      */
     private void resourceInit() {
         try {
-
+            log.info("我的配置文件");
             ConfList conf = confListService.searchByKey(ConfType.RESOURCE);
             if (conf != null && Objects.equals(conf.getContent(), version)) {
                 log.info("version: {}, resource has been init...", version);
                 return;
             }
+            log.info("写入我的配置文件");
             resourcesService.init();
 
             log.info("version: {}, resource init finish!", version);
@@ -84,7 +86,6 @@ public class SonicRunner implements ApplicationRunner {
                 return;
             }
 
-            globalParamsService.init();
             confListService.save(ConfType.REMOTE_DEBUG_TIMEOUT, "480", null);
             log.info("remote conf init finish!");
 
