@@ -21,15 +21,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.cloud.sonic.controller.models.domain.ConfList;
 import org.cloud.sonic.controller.models.interfaces.ConfType;
 import org.cloud.sonic.controller.services.ConfListService;
-import org.cloud.sonic.controller.services.GlobalParamsService;
 import org.cloud.sonic.controller.services.ResourcesService;
-import org.cloud.sonic.controller.services.TestSuitesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-
 import java.util.Objects;
 
 @Slf4j
@@ -39,8 +36,6 @@ public class SonicRunner implements ApplicationRunner {
     @Autowired
     private ResourcesService resourcesService;
 
-    @Autowired
-    GlobalParamsService globalParamsService;
 
     @Autowired
     private ConfListService confListService;
@@ -53,7 +48,6 @@ public class SonicRunner implements ApplicationRunner {
         resourceInit();
         remoteInit();
         idleInit();
-        globalParamsService.init();
     }
 
     /**

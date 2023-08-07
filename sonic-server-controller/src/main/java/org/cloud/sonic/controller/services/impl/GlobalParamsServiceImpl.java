@@ -23,8 +23,6 @@ import org.cloud.sonic.controller.mapper.GlobalParamsMapper;
 import org.cloud.sonic.controller.models.domain.GlobalParams;
 import org.cloud.sonic.controller.services.GlobalParamsService;
 import org.cloud.sonic.controller.services.impl.base.SonicServiceImpl;
-import org.cloud.sonic.controller.tools.Constant;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
@@ -38,17 +36,6 @@ import java.util.List;
 @Order(1)
 @Service("globalParamsService")
 public class GlobalParamsServiceImpl extends SonicServiceImpl<GlobalParamsMapper, GlobalParams> implements GlobalParamsService {
-
-    @Autowired
-    private GlobalParamsMapper globalParamsMapper;
-
-    @Override
-    public void init() {
-        GlobalParams globalParams = findById(Constant.BASE_ID);
-        if (null == globalParams) {
-            baseMapper.insert(new GlobalParams(-10, "base", "{\"login\":1,\"liveenter\":1,\"livechat\":2,\"livelike\":3,\"liveleave\":4,\"livefollow\":5}", 1));
-        }
-    }
 
     @Override
     public List<GlobalParams> findAll(int projectId, boolean additional) {

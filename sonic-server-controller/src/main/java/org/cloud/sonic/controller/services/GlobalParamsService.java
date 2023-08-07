@@ -10,7 +10,6 @@ public interface GlobalParamsService extends IService<GlobalParams> {
     /**
      * 初始化或全量更新
      */
-    void init();
 
     List<GlobalParams> findAll(int projectId, boolean additional);
 

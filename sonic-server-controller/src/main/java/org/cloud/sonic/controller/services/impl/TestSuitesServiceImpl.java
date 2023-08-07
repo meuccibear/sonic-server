@@ -161,11 +161,11 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
             testSuitesRunDTO.setSteps(steps);
         }
 
-        if (-10 == testSuitesRunDTO.getCaseId()) {
+        if (Constant.BASE_ID == testSuitesRunDTO.getCaseId()) {
             // 脚本
 //            {"liveenter":1,"livechat":2,"livelike":3,"liveleave":4,"livefollow":5}
-            log.info(testSuitesRunDTO.getScript().getClass().toString());
             if (null != testSuitesRunDTO.getScript()) {
+                log.info(testSuitesRunDTO.getScript().getClass().toString());
                 try {
                     JSONObject jsonObject = JSON.parseObject(testSuitesRunDTO.getScript());
                     return runScriptBook(jsonObject.getJSONArray("Order"), strike);
@@ -328,7 +328,7 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
             devicesMap.put(devices.getUdId(), devices);
         }
 
-        TestSuitesDTO testSuitesDTO = baseMapper.selectById(-10).convertTo();
+        TestSuitesDTO testSuitesDTO  = baseMapper.selectById(Constant.BASE_ID).convertTo();
         if (testSuitesDTO == null) {
             return new RespModel<>(3001, "suite.deleted");
         }

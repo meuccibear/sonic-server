@@ -26,18 +26,20 @@ import org.cloud.sonic.common.config.WhiteUrl;
 import org.cloud.sonic.common.exception.SonicException;
 import org.cloud.sonic.common.http.RespEnum;
 import org.cloud.sonic.common.http.RespModel;
+import org.cloud.sonic.controller.mapper.GlobalParamsMapper;
 import org.cloud.sonic.controller.mapper.TestSuitesMapper;
 import org.cloud.sonic.controller.models.base.TypeConverter;
+import org.cloud.sonic.controller.models.domain.GlobalParams;
 import org.cloud.sonic.controller.models.domain.Projects;
 import org.cloud.sonic.controller.models.domain.TestSuites;
 import org.cloud.sonic.controller.models.dto.ProjectsDTO;
 import org.cloud.sonic.controller.services.GlobalParamsService;
 import org.cloud.sonic.controller.services.ProjectsService;
 import org.cloud.sonic.controller.services.TestSuitesService;
+import org.cloud.sonic.controller.tools.Constant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,7 +58,10 @@ public class ProjectsController {
     private ProjectsService projectsService;
 
     @Autowired
-    TestSuitesMapper testSuitesMapper;
+    TestSuitesMapper testSuitesService;
+
+    @Autowired
+    GlobalParamsMapper globalParamsService;
 
     @WebAspect
     @Operation(summary = "更新项目信息", description = "新增或更新项目信息")
@@ -64,7 +69,11 @@ public class ProjectsController {
     public RespModel<String> save(@Validated @RequestBody ProjectsDTO projects) {
         Projects projectsData = projects.convertTo();
         projectsService.save(projectsData);
-        testSuitesMapper.insert(new TestSuites(null, 2, "执行脚本", 1, 0, 1000, projectsData.getId(), null));
+        log.info("id:{} {}", projectsData.getId().toString(), projectsData.getId() == 1);
+        if (projectsData.getId() == 1) {
+            globalParamsService.insert(new GlobalParams(Constant.BASE_ID, "base", "{\"login\":1,\"liveenter\":1,\"livechat\":2,\"livelike\":3,\"liveleave\":4,\"livefollow\":5}", 1));
+            testSuitesService.insert(new TestSuites(Constant.BASE_ID, 2, "执行脚本", 1, 0, 1000, 1, null));
+        }
         return new RespModel<>(RespEnum.UPDATE_OK);
     }
 
