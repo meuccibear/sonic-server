@@ -21,7 +21,7 @@ public final class Constant {
 
     }
 
-    private static JSONObject baseJson = null;
+    public static JSONObject baseJson = null;
 
     public static Integer getActionId(ActionType actionType) {
         if (null == baseJson) {
@@ -36,5 +36,7 @@ public final class Constant {
         return baseJson.getInteger(actionType.getValue());
     }
 
-
+    public static void clear() {
+        baseJson = null;
+    }
 }

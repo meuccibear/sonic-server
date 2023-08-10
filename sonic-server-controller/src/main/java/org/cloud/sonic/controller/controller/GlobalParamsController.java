@@ -26,6 +26,7 @@ import org.cloud.sonic.common.http.RespModel;
 import org.cloud.sonic.controller.models.domain.GlobalParams;
 import org.cloud.sonic.controller.models.dto.GlobalParamsDTO;
 import org.cloud.sonic.controller.services.GlobalParamsService;
+import org.cloud.sonic.controller.tools.Constant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +46,7 @@ public class GlobalParamsController {
     @PutMapping
     public RespModel<String> save(@Validated @RequestBody GlobalParamsDTO globalParamsDTO) {
         globalParamsService.save(globalParamsDTO.convertTo());
+        Constant.clear();
         return new RespModel<>(RespEnum.UPDATE_OK);
     }
 

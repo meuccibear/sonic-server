@@ -71,7 +71,7 @@ public class ProjectsController {
         projectsService.save(projectsData);
         log.info("id:{} {}", projectsData.getId().toString(), projectsData.getId() == 1);
         if (projectsData.getId() == 1) {
-            globalParamsService.insert(new GlobalParams(Constant.BASE_ID, "base", "{\"login\":1,\"liveenter\":1,\"livechat\":2,\"livelike\":3,\"liveleave\":4,\"livefollow\":5}", 1));
+            globalParamsService.insert(new GlobalParams(Constant.BASE_ID, "base", "{\"login\":0,\"liveenter\":0,\"livechat\":0,\"livelike\":0,\"liveleave\":0,\"livefollow\":0}", 1));
             testSuitesService.insert(new TestSuites(Constant.BASE_ID, 2, "执行脚本", 1, 0, 1000, 1, null));
         }
         return new RespModel<>(RespEnum.UPDATE_OK);

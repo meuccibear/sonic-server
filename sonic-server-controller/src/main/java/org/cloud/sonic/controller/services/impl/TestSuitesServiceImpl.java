@@ -261,7 +261,7 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
 
         } else {
             for (TestCasesDTO testCase : testSuitesDTO.getTestCases()) {
-                if (Constant.getActionId(ActionType.LOGIN) == testCase.getId()) {
+                if (Constant.getActionId(ActionType.LOGIN).equals(testCase.getId())) {
                     accountsList = accountsService.selectNotHaveUseAccounts(devicesList.size());
                     break;
                 }
