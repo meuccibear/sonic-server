@@ -29,7 +29,7 @@
 
 #### What is sonic ?
 
-> Sonic is a platform that integrates remote control debugging and automated testing of mobile devices, and strives to
+> ZPUTech is a platform that integrates remote control debugging and automated testing of mobile devices, and strives to
 > create a better use experience for global developers and test engineers.
 >
 >If you want to participate, welcome to join us! 💪

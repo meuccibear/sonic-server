@@ -1,6 +1,6 @@
 /*
- *   sonic-server  Sonic Cloud Real Machine Platform.
- *   Copyright (C) 2022 SonicCloudOrg
+ *   ZPUTech-server  ZPUTech Cloud Real Machine Platform.
+ *   Copyright (C) 2022 ZPUTechCloudOrg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU Affero General Public License as published
@@ -80,7 +80,7 @@ public class DingTalkImpl implements RobotMessenger {
               msgtype: 'markdown',
               markdown: {
                title: 'Sonic云真机测试平台'+(isWeekly?'周':'日')+'报',
-               text: '### Sonic云真机测试平台'+(isWeekly ? '周': '日')+'报
+               text: '### ZPUTech云真机测试平台'+(isWeekly ? '周': '日')+'报
             > ###### 项目：'+projectName+'
             > ###### 时间：'+getFormat().format(startDate)+' ～ '+getFormat().format(endDate)+'
             > ###### 共测试：'+total+'次
@@ -97,7 +97,7 @@ public class DingTalkImpl implements RobotMessenger {
             { msgtype: 'markdown',
               markdown: {
                 title: '设备温度异常通知',
-                text: '### Sonic设备高温'+(errorType == 1 ? '预警' : '超时，已关机！')+'
+                text: '### ZPUTech设备高温'+(errorType == 1 ? '预警' : '超时，已关机！')+'
             > ###### 设备序列号：'+udId+'
             > ###### 电池温度：<font color=#F56C6C>'+tem+' ℃</font>'
               }

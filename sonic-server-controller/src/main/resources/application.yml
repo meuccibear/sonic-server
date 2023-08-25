@@ -2,7 +2,7 @@ spring:
   version: @project.version@
   application:
     name: @project.artifactId@
-    des: "Controller of Sonic Cloud Real Machine Platform"
+    des: "Controller of ZPUTech Cloud Real Machine Platform"
   profiles:
     active: @project.artifactId@,eureka,jdbc,feign,logging,user
   main:

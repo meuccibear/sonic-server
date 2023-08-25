@@ -4,6 +4,6 @@ spring:
   version: @project.version@
   application:
     name: @project.artifactId@
-    des: "Gateway of Sonic Cloud Real Machine Platform"
+    des: "Gateway of ZPUTech Cloud Real Machine Platform"
   profiles:
     active: @project.artifactId@,eureka,logging,user

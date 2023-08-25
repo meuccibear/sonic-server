@@ -1,6 +1,6 @@
 /*
- *   sonic-server  Sonic Cloud Real Machine Platform.
- *   Copyright (C) 2022 SonicCloudOrg
+ *   ZPUTech-server  ZPUTech Cloud Real Machine Platform.
+ *   Copyright (C) 2022 ZPUTechCloudOrg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU Affero General Public License as published
@@ -42,7 +42,7 @@ public class WeChatImpl implements RobotMessenger {
             失败数：#{fail}
             测试报告：[点击查看](#{url})""");
     Expression templateProjectSummaryMessage = RobotMessenger.parseTemplate("""
-            ### Sonic云真机测试平台#{isWeekly ? '周': '日'}报
+            ### ZPUTech云真机测试平台#{isWeekly ? '周': '日'}报
             > ###### 项目：#{projectName}
             > ###### 时间：#{getFormat().format(startDate)} ～ #{getFormat().format(endDate)}
             > ###### 共测试：#{total}次
@@ -52,7 +52,7 @@ public class WeChatImpl implements RobotMessenger {
             > ###### 测试通过率：#{rate}%
             > ###### 详细统计：[点击查看](#{url})""");
     Expression templateDeviceMessage = RobotMessenger.parseTemplate("""
-            ### Sonic设备高温#{errorType == 1 ? '预警' : '超时，已关机！'}
+            ### ZPUTech设备高温#{errorType == 1 ? '预警' : '超时，已关机！'}
             > ###### 设备序列号：#{udId}
             > ###### 电池温度：<font color="warning">#{tem}℃</font>""");
 

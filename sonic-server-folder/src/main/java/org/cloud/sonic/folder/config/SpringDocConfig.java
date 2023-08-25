@@ -1,6 +1,6 @@
 /*
- *   sonic-server  Sonic Cloud Real Machine Platform.
- *   Copyright (C) 2022 SonicCloudOrg
+ *   sonic-server  ZPUTech Cloud Real Machine Platform.
+ *   Copyright (C) 2022 ZPUTechCloudOrg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU Affero General Public License as published
@@ -38,7 +38,7 @@ public class SpringDocConfig {
                         .version(version)
                         .contact(new Contact().name("SonicCloudOrg")
                                 .email("soniccloudorg@163.com"))
-                        .description("Folder of Sonic Cloud Real Machine Platform")
+                        .description("Folder of ZPUTech Cloud Real Machine Platform")
                         .termsOfService("https://github.com/SonicCloudOrg/sonic-server/blob/main/LICENSE")
                         .license(new License().name("AGPL v3")
                                 .url("https://github.com/SonicCloudOrg/sonic-server/blob/main/LICENSE")));

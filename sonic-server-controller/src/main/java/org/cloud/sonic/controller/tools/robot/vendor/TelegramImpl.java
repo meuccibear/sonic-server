@@ -1,6 +1,6 @@
 /*
- *   sonic-server  Sonic Cloud Real Machine Platform.
- *   Copyright (C) 2022 SonicCloudOrg
+ *   ZPUTech-server  ZPUTech Cloud Real Machine Platform.
+ *   Copyright (C) 2022 ZPUTechCloudOrg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU Affero General Public License as published
@@ -42,7 +42,7 @@ public class TelegramImpl implements RobotMessenger {
             <i>失败数：#{fail}</i>
             <b>测试报告：<a href="#{url}">点击查看</a></b>""");
     Expression templateProjectSummaryMessage = RobotMessenger.parseTemplate("""
-            <strong> Sonic云真机测试平台#{isWeekly ? '周': '日'}报</strong>
+            <strong> ZPUTech云真机测试平台#{isWeekly ? '周': '日'}报</strong>
             <i> 项目：#{projectName}</i>
             <i> 时间：#{getFormat().format(startDate)} ～ #{getFormat().format(endDate)}</i>
             <i> 共测试：#{total}次</i>
@@ -52,7 +52,7 @@ public class TelegramImpl implements RobotMessenger {
             <i> 测试通过率：#{rate}%</i>
             <b>详细统计：<a href="#{url}">点击查看</a></b>""");
     Expression templateDeviceMessage = RobotMessenger.parseTemplate("""
-            <strong> Sonic设备高温#{errorType == 1 ? '预警' : '超时，已关机！'}</strong>
+            <strong> ZPUTech设备高温#{errorType == 1 ? '预警' : '超时，已关机！'}</strong>
             <i> 设备序列号：#{udId}</i>
             <i> 电池温度：#{tem}" ℃</i>""");
 
