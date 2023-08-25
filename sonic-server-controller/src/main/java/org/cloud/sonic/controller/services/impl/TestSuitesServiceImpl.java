@@ -311,6 +311,7 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
         Accounts dbAccounts;
         for (Accounts accounts : accountsList) {
             dbAccounts = accountsService.findByName(accounts.getName());
+            accounts.setStatus(org.cloud.sonic.common.gitUtils.ObjectUtils.isEmpty(accounts.getUdId()) ? 1 : 2);
             if (null == dbAccounts) {
                 accounts.setAppName("Tiktok");
                 accounts.setProjectId(projectId);
@@ -377,7 +378,7 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
             runScript(order, strike, accountsList, accountMap, devicesMap, testSuitesDTO);
             if (null != delayed && 0 != delayed) {
                 try {
-                    Thread.sleep(delayed);
+                    Thread.sleep(delayed * 1000);
                 } catch (InterruptedException e) {
                 }
             }
