@@ -160,15 +160,28 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
             }
             testSuitesRunDTO.setSteps(steps);
         }
-
-        if (Constant.BASE_ID == testSuitesRunDTO.getCaseId()) {
+        String association = "Association";
+        if (-10 == testSuitesRunDTO.getCaseId()) {
             // 脚本
 //            {"liveenter":1,"livechat":2,"livelike":3,"liveleave":4,"livefollow":5}
             if (null != testSuitesRunDTO.getScript()) {
-                log.info(testSuitesRunDTO.getScript().getClass().toString());
                 try {
                     JSONObject jsonObject = JSON.parseObject(testSuitesRunDTO.getScript());
-                    return runScriptBook(jsonObject.getJSONArray("Order"), strike);
+                    if (jsonObject.containsKey("Order")) {
+                        return runScriptBook(jsonObject.getJSONArray("Order"), strike);
+                    } else if (jsonObject.containsKey(association)) {
+                        List<Accounts> accountsList = new ArrayList<>();
+                        JSONArray accountArr = jsonObject.getJSONArray(association);
+                        JSONObject account = null;
+                        Accounts accounts;
+                        for (int i = 0; i < accountArr.size(); i++) {
+                            account = accountArr.getJSONObject(i);
+                            accounts = JSON.toJavaObject(account, Accounts.class);
+                            accountsList.add(accounts);
+                        }
+                        addAccountv2(accountsList, testSuitesRunDTO.getId());
+                        return new RespModel<>(RespEnum.HANDLE_OK);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -294,6 +307,24 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
         return result;
     }
 
+    private void addAccountv2(List<Accounts> accountsList, Integer projectId) {
+        Accounts dbAccounts;
+        for (Accounts accounts : accountsList) {
+            dbAccounts = accountsService.findByName(accounts.getName());
+            if (null == dbAccounts) {
+                accounts.setAppName("Tiktok");
+                accounts.setProjectId(projectId);
+                if(ObjectUtils.isEmpty(accounts.getPassword())){
+                    accounts.setPassword("");
+                }
+                accountsService.save(accounts);
+            } else {
+                accounts.setId(dbAccounts.getId());
+                accountsService.updateById(accounts);
+            }
+        }
+    }
+
     private RespModel<Integer> runScriptBook(JSONArray orderArr, String strike) {
         JSONObject order;
         List<String> names = new ArrayList<>();
@@ -309,8 +340,13 @@ public class TestSuitesServiceImpl extends SonicServiceImpl<TestSuitesMapper, Te
             accountMap.put(accounts.getName(), accounts);
             udIdList.add(accounts.getUdId());
             if (StringUtils.isEmpty(accounts.getUdId())) {
-                return new RespModel<>(3003, "suite.account");
+                return new RespModel<>(3003, "suite.account.device");
             }
+        }
+
+        log.info(JSON.toJSONString(udIdList));
+        if(StringUtils.isEmpty(udIdList)){
+            return new RespModel<>(3003, "suite.account.null");
         }
 
         List<Devices> devicesList = devicesMapper.getDevicesByUdId(udIdList);

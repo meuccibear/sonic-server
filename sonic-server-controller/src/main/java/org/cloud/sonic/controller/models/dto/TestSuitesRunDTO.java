@@ -24,6 +24,9 @@ public class TestSuitesRunDTO implements Serializable {
     @Schema(description = "用例编号", example = "1")
     Integer caseId;
 
+    @Schema(description = "projectId")
+    Integer id;
+
     @Schema(description = "分组", required = true, example = "1")
     Integer groupId;
 

@@ -31,6 +31,8 @@ public class StringUtils<resultMap> {
         } else if (value instanceof Integer) {
 //            System.out.println("Integer");
             return (Integer) value > 0;
+        } else if (value instanceof List) {
+            return ((List<?>) value).size() > 0;
         }
         return true;
     }
